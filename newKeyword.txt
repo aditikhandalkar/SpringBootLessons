@@ -1,0 +1,34 @@
+You can create objects using the new keyword in a spring application.
+
+But these objects would be outside the scope of the Spring Application Context and hence are not spring managed.
+
+Since these are not spring managed, any nested levels of dependency (such as your Service class having a reference to your Repository class etc) will not be resolved.
+
+So if you try to invoke a method in your service class, you might end up getting a NullPointer for the repository.
+
+@Service
+public class GreetingService {
+    @Autowired
+    private GreetingRepository greetingRepository;
+    public String greet(String userid) {
+       return greetingRepository.greet(userid); 
+    }
+}
+
+@RestController
+public class GreetingController {
+    @Autowired
+    private GreetingService greetingService;
+    @RequestMapping("/greeting")
+    public String greeting(@RequestParam(value = "name", defaultValue = "World") String name) {
+        return String.format("Hello %s", greetingService.greet(name));
+    }
+    @RequestMapping("/greeting2")
+    public String greeting2(@RequestParam(value = "name", defaultValue = "World") String name) {
+      GreetingService newGreetingService = new GreetingService();
+      return String.format("Hello %s", newGreetingService.greet(name));
+    }
+}
+In the above example /greeting will work but /greeting2 will fail because the nested dependencies are not resolved.
+
+So if you want your object to be spring managed, then you have to Autowire them. Generally speaking, for view layer pojos and custom bean configurations, you will use the new keyword.
